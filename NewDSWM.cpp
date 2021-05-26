@@ -43,7 +43,6 @@ double y[nvar];
 double amplitudini[npart];
 ///////////////////////////////////////////////////////
 void init_particule(double th, double ph, double th_ea, double ph_ea) {
-
 	ofstream fisier("E:\\Stoleriu\\C\\special\\3d\\res\\2021\\DSWM\\particule.dat");
 
 	int j, counter;
@@ -60,7 +59,6 @@ void init_particule(double th, double ph, double th_ea, double ph_ea) {
 	V_inf = 4.0 * Pi / 3.0 * pow(dist * dia / 2.0, 3.0);
 
 	for (int i = 0; i < npart; i++) {
-
 		P[i].strat = 1;
 
 		P[i].L_j = 5.0e-7 / V_inf;
@@ -138,13 +136,11 @@ void init_particule(double th, double ph, double th_ea, double ph_ea) {
 					}
 				}
 			}
-
 		}
 	}
 
 	//alocarea vecinilor pentru exchange
 	if (J_exch != 0.0) {
-
 		for (int i = 0; i < npart; i++) {
 			Data1 = P[i];
 			for (int f = 0; f < npart; f++) {
@@ -165,7 +161,6 @@ void init_particule(double th, double ph, double th_ea, double ph_ea) {
 				}
 			}
 		}
-
 	}
 
 	for (int i = 0; i < npart; i++)
@@ -244,7 +239,6 @@ void reset_particule() {
 }
 /////////////////////////////////////////////////////////////
 void Add_interactions(int part, Camp *H, double *y) {
-
 	int kk;
 	double mp_x, mp_y, mp_z;
 	for (int j = 0; j < nr_vecini[part]; j++) {
@@ -256,7 +250,6 @@ void Add_interactions(int part, Camp *H, double *y) {
 		H->Hx += J_dip * Pozitie[part][j].coef * (Pozitie[part][j].xx * mp_x + Pozitie[part][j].xy * mp_y + Pozitie[part][j].xz * mp_z);
 		H->Hy += J_dip * Pozitie[part][j].coef * (Pozitie[part][j].yx * mp_x + Pozitie[part][j].yy * mp_y + Pozitie[part][j].yz * mp_z);
 		H->Hz += J_dip * Pozitie[part][j].coef * (Pozitie[part][j].zx * mp_x + Pozitie[part][j].zy * mp_y + Pozitie[part][j].zz * mp_z);
-
 	}
 	for (int j = 0; j < nr_vecini_exch[part]; j++) {
 		kk = 2 * Pozitie_strat[part][j].vecin;
@@ -273,7 +266,6 @@ void Add_interactions(int part, Camp *H, double *y) {
 }
 ///////////////////////////////////////////////////////////////////
 void build_magnetization(double *x, int lim1, int lim2, Moment *M) {
-
 	M->Mx = 0.0;
 	M->My = 0.0;
 	M->Mz = 0.0;
@@ -281,9 +273,7 @@ void build_magnetization(double *x, int lim1, int lim2, Moment *M) {
 	M->theta_M = 0.0;
 	M->phi_M = 0.0;
 
-
 	for (int i = lim1; i < lim2; i++) {
-
 		P[i].theta_m = x[2 * i + 0];
 		P[i].phi_m = x[2 * i + 1];
 
@@ -316,7 +306,6 @@ double SW_fcn(double x, void *params) {
 }
 ///////////////////////////////////////////////////////////////////
 void SW(double th_h, double ph_h, double a, double *sol) {
-
 	double st, sp, ct, cp;
 	double mx, my, mz;
 	double hx, hy, hz;
@@ -334,7 +323,6 @@ void SW(double th_h, double ph_h, double a, double *sol) {
 	}
 
 	for (int part = 0; part < npart; part++) {
-
 		camp(th_h, ph_h, a, &H);
 		Add_interactions(part, &H, sol_j);
 		amplitudini[part] = H.Hamp;
@@ -401,7 +389,6 @@ void SW(double th_h, double ph_h, double a, double *sol) {
 
 		sol[2 * part + 0] = SafeAcos(mz);
 		sol[2 * part + 1] = atan2(my, mx);
-
 	}
 	delete[] sol_j;
 	/*
@@ -409,7 +396,6 @@ void SW(double th_h, double ph_h, double a, double *sol) {
 	int n_sols, status, iter, max_iter = 203;
 
 	for (int part = 0; part < npart; part++) {
-
 		iter = 0;
 		double *sols, *limits;
 		const gsl_root_fsolver_type *T;
@@ -501,13 +487,12 @@ void SW(double th_h, double ph_h, double a, double *sol) {
 				loco_angle_M[part] = (fabs(loco_old_angle_M[part] - Sol_bune[0]) > fabs(loco_old_angle_M[part] - Sol_bune[1])) ? Sol_bune[1] : Sol_bune[0];
 			}
 		}
-
 	}*/
-
 }
 ///////////////////////////////////////////////////////////////////
-void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new) {
 
+void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new) 
+{
 	double raport;
 	double mx0, mx1, my0, my1, mz0, mz1, mxf, myf, mzf;
 	double mx0r, my0r, mz0r, mx1r, my1r, mz1r;
@@ -518,7 +503,6 @@ void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new) 
 	double torqx, torqy, torqz;
 
 	for (int i = 0; i < npart; i++) {
-
 		mx0 = sin(sol_old[2 * i + 0]) * cos(sol_old[2 * i + 1]);
 		my0 = sin(sol_old[2 * i + 0]) * sin(sol_old[2 * i + 1]);
 		mz0 = cos(sol_old[2 * i + 0]);
@@ -536,10 +520,10 @@ void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new) 
 		if ((loco_angle_target_uthea<Pis2 && loco_angle_old_uthea>Pis2) || (loco_angle_target_uthea > Pis2 && loco_angle_old_uthea < Pis2))
 			loco_angle_with_ea_old = Pix2 - loco_angle_with_ea_old;
 
-
 		// se roteste pozitia veche a lui H astfel incat acesta sa fie dupa Oz si se afla noul M
 		double R1[3][3], R2[3][3];
-		////////////////////////////////////////////////////////////////////////// ////////////////////////////////////////////////////////////////////////// CE-I ASTA???
+		////////////////////////////////////////////////////////////////////////// 
+		////////////////////////////////////////////////////////////////////////// CE-I ASTA???
 
 		s0 = sin(sol_target[2 * i + 0]);
 		s1 = sin(sol_target[2 * i + 1]);
@@ -593,39 +577,45 @@ void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new) 
 
 		sol_new[2 * i + 0] = SafeAcos(mzf);
 		sol_new[2 * i + 1] = atan2(myf, mxf);
-
 	}
-
 }
 ///////////////////////////////////////////////////////////////////
-void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW) {
 
+void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW) 
+{
 	cout << "|||| SE CALCULEAZA MHL CU SW |||" << endl;
 	ofstream fisier("E:\\Stoleriu\\C\\special\\3d\\res\\2021\\DSWM\\mhl_sw.dat");
 	double h = 0, t = 0;
 
 	for (int i = 0; i < (int)(sir_camp.size()); i++) {
-
 		h = sir_camp[i];
 		t = 0.0;
 		torq_mod = 1.0;
 
-		while (cond_sw) {
-			for (int part = 0; part < npart; part++) {
+		while (cond_sw) 
+		{
+			for (int part = 0; part < npart; part++) 
+			{
 				y_in[2 * part + 0] = P[part].theta_m;
 				y_in[2 * part + 1] = P[part].phi_m;
 				y[2 * part + 0] = y_in[2 * part + 0];
 				y[2 * part + 1] = y_in[2 * part + 1];
 			}
+
 			SW(th_h, ph_h, h, y);
-			for (int part = 0; part < npart; part++) {
+			
+			for (int part = 0; part < npart; part++) 
+			{
 				y_SW[2 * part + 0] = y[2 * part + 0];
 				y_SW[2 * part + 1] = y[2 * part + 1];
 				y[2 * part + 0] = y_in[2 * part + 0];
 				y[2 * part + 1] = y_in[2 * part + 1];
 			}
+
 			dynamic_SW(pas_SW, y_in, y_SW, y);
-			for (int part = 0; part < npart; part++) {
+			
+			for (int part = 0; part < npart; part++) 
+			{
 				P[part].theta_m = y[2 * part + 0];
 				P[part].phi_m = y[2 * part + 1];
 			}
@@ -641,10 +631,11 @@ void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW) {
 	fisier.close();
 }
 ///////////////////////////////////////////////////
-int main() {
+int main()
+{
 	srand((unsigned)time(0));
 
-	double mu_H = 1.001;//Frecventa campului extern in MHz
+	double mu_H = 10.001;//Frecventa campului extern in MHz
 	double mu_punct = mu_H * 405;//Frecventa de inregistrare a punctelor de pe MHL in MHz
 	double T_H = 1.0 / mu_H * 1.0e+6;//ps
 	double t_stop = 1.0 / mu_punct * 1.0e+6;//ps
