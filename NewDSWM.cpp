@@ -51,6 +51,7 @@ void reset_particule();
 void Add_interactions(int part, Camp *H, double *y);
 void build_magnetization(double *x, int lim1, int lim2, Moment *M);
 double SW_fcn(double x, void *params);
+void SW(double th_h, double ph_h, double a, double *sol);
 void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new);
 void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW);
 
@@ -72,10 +73,69 @@ int main()
 	cout << "T_H = " << T_H << " picosecunde" << endl;
 
 	init_particule(0.0015, 1.5e-2, 0.12, 0.12);
+
 	camp_sir(0, 600000, t_stop, T_H, &sir_camp);
 
-	mhl_sw(0.011, 0.012, t_stop, T_H, t_stop / 250.0);
+	//mhl_sw(0.011, 0.012, t_stop, T_H, t_stop / 250.0); 
+	double Theta_H = 45.0;
+	double Phi_H = 1.0e-3;
 
+	ofstream fisier("E:\\Stoleriu\\C\\special\\3d\\res\\2021\\DSWM\\mhl_sw_45.dat");
+	double h = 0, t = 0;
+
+	double pas_SW = t_stop/1.0;
+
+	for (int i = 0; i < (int)(sir_camp.size()); i++)
+	{
+		h = sir_camp[i];
+		t = 0.0;
+		torq_mod = 1.0;
+
+
+			for (int part = 0; part < npart; part++)
+			{
+				y_in[2 * part + 0] = P[part].theta_m;
+				y_in[2 * part + 1] = P[part].phi_m;
+				y[2 * part + 0] = y_in[2 * part + 0];
+				y[2 * part + 1] = y_in[2 * part + 1];
+			}
+
+			SW(Theta_H, Phi_H, h, y);
+
+			for (int part = 0; part < npart; part++)
+			{
+				y_SW[2 * part + 0] = y[2 * part + 0];
+				y_SW[2 * part + 1] = y[2 * part + 1];
+				y[2 * part + 0] = y_in[2 * part + 0];
+				y[2 * part + 1] = y_in[2 * part + 1];
+			}
+		while (/*cond_sw*/ t < t_stop)
+		{
+			dynamic_SW(pas_SW, y_in, y_SW, y);
+
+			for (int part = 0; part < npart; part++)
+			{
+				y_in[2 * part + 0] = y[2 * part + 0];
+				y_in[2 * part + 1] = y[2 * part + 1];
+			}
+			t += pas_SW;
+
+		}
+
+
+			for (int part = 0; part < npart; part++)
+			{
+				P[part].theta_m = y[2 * part + 0];
+				P[part].phi_m = y[2 * part + 1];
+			}
+		camp(Theta_H, Phi_H, h, &H);
+		build_magnetization(y, 0, npart, &M);
+		mhl = (M.Mx * H.Hx + M.My * H.Hy + M.Mz * H.Hz) / h;
+
+		cout << i << '\t' << h / 1 << '\t' << mhl << endl;
+		fisier << h / 1 << '\t' << mhl << endl;
+	}
+	fisier.close();
 	return 0;
 }
 
@@ -411,19 +471,27 @@ void SW(double th_h, double ph_h, double a, double *sol) {
 		sol_bune[0] = real(t1);
 		sol_bune[1] = Pi + real(t2);
 
-		if (H.Hamp == 0.0) {
+		if (H.Hamp == 0.0) 
+		{
 			loco_angle_M = (loco_old_angle_M < Pis2) ? 0.0 : Pi;
 		}
-		if (H.Hamp >= Hc) {
+
+		if (H.Hamp >= Hc) 
+		{
 			loco_angle_M = (loco_angle_H < Pis2) ? sol_bune[0] : sol_bune[1];
 		}
-		if (H.Hamp < Hc) {
+		else
+		//if (H.Hamp < Hc) 
+		{
 			loco_angle_M = (fabs(loco_old_angle_M - sol_bune[0]) > fabs(loco_old_angle_M - sol_bune[1])) ? sol_bune[1] : sol_bune[0];
 			altr_angle_M = (fabs(loco_old_angle_M - sol_bune[0]) > fabs(loco_old_angle_M - sol_bune[1])) ? sol_bune[0] : sol_bune[1];
 		}
 
-		temp_ea = (loco_angle_M <= Pi) ? sin(loco_angle_H - loco_angle_M) / sin(loco_angle_H) : sin(loco_angle_H - (Pix2 - loco_angle_M)) / sin(loco_angle_H);
-		temp_H = (loco_angle_M <= Pi) ? sin(loco_angle_M) / sin(loco_angle_H) : sin(Pix2 - loco_angle_M) / sin(loco_angle_H);
+		temp_ea = (loco_angle_M <= Pi) ? sin(loco_angle_H - loco_angle_M) / sin(loco_angle_H) : 
+			                             sin(loco_angle_H - (Pix2 - loco_angle_M)) / sin(loco_angle_H);
+
+		temp_H = (loco_angle_M <= Pi) ? sin(loco_angle_M) / sin(loco_angle_H) : 
+			                            sin(Pix2 - loco_angle_M) / sin(loco_angle_H);
 
 		mx = (temp_ea * P[part].eax + temp_H * hx);
 		my = (temp_ea * P[part].eay + temp_H * hy);
