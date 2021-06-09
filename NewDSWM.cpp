@@ -41,8 +41,50 @@ double y_SW[nvar];
 double y_in[nvar];
 double y[nvar];
 double amplitudini[npart];
-///////////////////////////////////////////////////////
-void init_particule(double th, double ph, double th_ea, double ph_ea) {
+
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
+
+void init_particule(double th, double ph, double th_ea, double ph_ea);
+void reset_particule();
+void Add_interactions(int part, Camp *H, double *y);
+void build_magnetization(double *x, int lim1, int lim2, Moment *M);
+double SW_fcn(double x, void *params);
+void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new);
+void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW);
+
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
+int main()
+{
+	srand((unsigned)time(0));
+
+	double num_points = 405;
+
+	double mu_H = 10.001;							//Frecventa campului extern in MHz
+	double mu_punct = mu_H * num_points;			//Frecventa de inregistrare a punctelor de pe MHL in MHz
+	double T_H = 1.0 / mu_H * 1.0e+6;				//ps
+	double t_stop = 1.0 / mu_punct * 1.0e+6;		//ps
+
+	cout << "t_stop = " << t_stop << " picosecunde" << endl;
+	cout << "T_H = " << T_H << " picosecunde" << endl;
+
+	init_particule(0.0015, 1.5e-2, 0.12, 0.12);
+	camp_sir(0, 600000, t_stop, T_H, &sir_camp);
+
+	mhl_sw(0.011, 0.012, t_stop, T_H, t_stop / 250.0);
+
+	return 0;
+}
+
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
+
+void init_particule(double th, double ph, double th_ea, double ph_ea) 
+{
 	ofstream fisier("E:\\Stoleriu\\C\\special\\3d\\res\\2021\\DSWM\\particule.dat");
 
 	int j, counter;
@@ -140,28 +182,28 @@ void init_particule(double th, double ph, double th_ea, double ph_ea) {
 	}
 
 	//alocarea vecinilor pentru exchange
-	if (J_exch != 0.0) {
-		for (int i = 0; i < npart; i++) {
-			Data1 = P[i];
-			for (int f = 0; f < npart; f++) {
-				Data2 = P[f];
-				if (i != f) {
-					position_coeficients(Data1, Data2, &Pos_Coef);
-					if (Pos_Coef.coef > prag_vecini_exch) {
-						if (nr_vecini_exch[i] + 1 > n_max_vec_exch) {
-							cout << "prea multi vecini de exchange" << endl;
-							break;
-						}
-						else {
-							nr_vecini_exch[i]++;
-							Pos_Coef.vecin = f;
-							Pozitie_strat[i][nr_vecini_exch[i] - 1] = Pos_Coef;
-						}
-					}
-				}
-			}
-		}
-	}
+// 	if (J_exch != 0.0) {
+// 		for (int i = 0; i < npart; i++) {
+// 			Data1 = P[i];
+// 			for (int f = 0; f < npart; f++) {
+// 				Data2 = P[f];
+// 				if (i != f) {
+// 					position_coeficients(Data1, Data2, &Pos_Coef);
+// 					if (Pos_Coef.coef > prag_vecini_exch) {
+// 						if (nr_vecini_exch[i] + 1 > n_max_vec_exch) {
+// 							cout << "prea multi vecini de exchange" << endl;
+// 							break;
+// 						}
+// 						else {
+// 							nr_vecini_exch[i]++;
+// 							Pos_Coef.vecin = f;
+// 							Pozitie_strat[i][nr_vecini_exch[i] - 1] = Pos_Coef;
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
 
 	for (int i = 0; i < npart; i++)
 		P_init[i] = P[i];
@@ -174,10 +216,10 @@ void init_particule(double th, double ph, double th_ea, double ph_ea) {
 		<< "K" << '\t'
 		<< "th_EA" << '\t'
 		<< "ph_EA" << '\t'
-		<< "V" << '\t'
-		<< "m" << '\t'
+		<< "V" << '\t' << '\t'
+		<< "m" << '\t' << '\t'
 		<< "Ms" << '\t'
-		<< "KV" << '\t'
+		<< "KV" << '\t' << '\t'
 		<< "vecini_dip" << '\t'
 		<< "vecini_exch" << endl;
 
@@ -194,7 +236,7 @@ void init_particule(double th, double ph, double th_ea, double ph_ea) {
 			<< P[i].m << '\t'
 			<< P[i].Ms << '\t'
 			<< P[i].V * P[i].K1 << '\t'
-			<< nr_vecini[i] << '\t'
+			<< nr_vecini[i] << '\t' << '\t'
 			<< nr_vecini_exch[i] << endl;
 	}
 
@@ -491,7 +533,7 @@ void SW(double th_h, double ph_h, double a, double *sol) {
 }
 ///////////////////////////////////////////////////////////////////
 
-void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new) 
+void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new)
 {
 	double raport;
 	double mx0, mx1, my0, my1, mz0, mz1, mxf, myf, mzf;
@@ -522,7 +564,7 @@ void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new)
 
 		// se roteste pozitia veche a lui H astfel incat acesta sa fie dupa Oz si se afla noul M
 		double R1[3][3], R2[3][3];
-		////////////////////////////////////////////////////////////////////////// 
+		//////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////// CE-I ASTA???
 
 		s0 = sin(sol_target[2 * i + 0]);
@@ -581,20 +623,21 @@ void dynamic_SW(double t, double *sol_old, double *sol_target, double *sol_new)
 }
 ///////////////////////////////////////////////////////////////////
 
-void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW) 
+void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW)
 {
 	cout << "|||| SE CALCULEAZA MHL CU SW |||" << endl;
 	ofstream fisier("E:\\Stoleriu\\C\\special\\3d\\res\\2021\\DSWM\\mhl_sw.dat");
 	double h = 0, t = 0;
 
-	for (int i = 0; i < (int)(sir_camp.size()); i++) {
+	for (int i = 0; i < (int)(sir_camp.size()); i++) 
+	{
 		h = sir_camp[i];
 		t = 0.0;
 		torq_mod = 1.0;
 
-		while (cond_sw) 
+		while (cond_sw)
 		{
-			for (int part = 0; part < npart; part++) 
+			for (int part = 0; part < npart; part++)
 			{
 				y_in[2 * part + 0] = P[part].theta_m;
 				y_in[2 * part + 1] = P[part].phi_m;
@@ -603,8 +646,8 @@ void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW)
 			}
 
 			SW(th_h, ph_h, h, y);
-			
-			for (int part = 0; part < npart; part++) 
+
+			for (int part = 0; part < npart; part++)
 			{
 				y_SW[2 * part + 0] = y[2 * part + 0];
 				y_SW[2 * part + 1] = y[2 * part + 1];
@@ -613,8 +656,8 @@ void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW)
 			}
 
 			dynamic_SW(pas_SW, y_in, y_SW, y);
-			
-			for (int part = 0; part < npart; part++) 
+
+			for (int part = 0; part < npart; part++)
 			{
 				P[part].theta_m = y[2 * part + 0];
 				P[part].phi_m = y[2 * part + 1];
@@ -629,23 +672,4 @@ void mhl_sw(double th_h, double ph_h, double t_stop, double T, double pas_SW)
 		fisier << h / 1 << '\t' << mhl << endl;
 	}
 	fisier.close();
-}
-///////////////////////////////////////////////////
-int main()
-{
-	srand((unsigned)time(0));
-
-	double mu_H = 10.001;//Frecventa campului extern in MHz
-	double mu_punct = mu_H * 405;//Frecventa de inregistrare a punctelor de pe MHL in MHz
-	double T_H = 1.0 / mu_H * 1.0e+6;//ps
-	double t_stop = 1.0 / mu_punct * 1.0e+6;//ps
-
-	cout << "t_stop = " << t_stop << " picosecunde" << endl;
-	cout << "T_H = " << T_H << " picosecunde" << endl;
-
-	init_particule(0.0015, 1.5e-2, 0.12, 0.12);
-	camp_sir(0, 600000, t_stop, T_H, &sir_camp);
-	mhl_sw(0.011, 0.012, t_stop, T_H, t_stop / 250.0);
-
-	return 0;
 }

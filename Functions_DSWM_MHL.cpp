@@ -7,30 +7,39 @@
 
 //using namespace std;
 
-double gtr(double x) {
+double gtr(double x) 
+{
 	return x * Pi / 180.0;
 }
-double rtg(double x) {
+
+double rtg(double x) 
+{
 	return x * 180.0 / Pi;
 }
-double uniform_rand(double low, double high) {
+
+double uniform_rand(double low, double high) 
+{
 	double range = high - low;
 	return low + (double)(range * rand() / RAND_MAX);
 }
-double normal_rand(double mean, double sigma) {
+
+double normal_rand(double mean, double sigma) 
+{
 	double u1 = uniform_rand(0.0, 1.0);
 	double u2 = uniform_rand(0.0, 1.0);
 	double z0 = sqrt(-2.0*log(u1))*cos(Pix2*u2);
 	return z0 * sigma + mean;
 }
 
-double SafeAcos(double x) {
+double SafeAcos(double x) 
+{
 	if (x < -1.0) x = -1.0;
 	else if (x > 1.0) x = 1.0;
 	return acos(x);
 }
-double timp_max(double A, double theta_in, double theta_tar) {
 
+double timp_max(double A, double theta_in, double theta_tar) 
+{
 	double p1, p2, p3, p4, Y0, ampl, expo, psi, zeta;
 	double th_in = 0, theta_in_c, tmc, u, x, timp_polynom = 0;
 
@@ -62,13 +71,16 @@ double timp_max(double A, double theta_in, double theta_tar) {
 	return timp_polynom + tmc;
 }
 
-void camp(double th, double ph, double a, Camp* F) {
-	if (a >= 0.0) {
+void camp(double th, double ph, double a, Camp* F) 
+{
+	if (a >= 0.0) 
+	{
 		F->Hamp = a;
 		F->theta_h = gtr(th);
 		F->phi_h = gtr(ph);
 	}
-	if (a < 0.0) {
+	else
+	{
 		F->Hamp = -1.0*a;
 		F->theta_h = gtr(180.0 - th);
 		if (ph < 180.0)
@@ -83,12 +95,11 @@ void camp(double th, double ph, double a, Camp* F) {
 	F->Hy = F->Hamp*sin(F->theta_h)*sin(F->phi_h);
 	F->Hz = F->Hamp*cos(F->theta_h);
 }
-void camp_sir(int nr_frc, double a, double t, double T, std::vector<double> *sir) {
-	
-	
+
+void camp_sir(int nr_frc, double a, double t, double T, std::vector<double> *sir) 
+{
 	/*Aceasta functie genereaza un sir de campuri in A/m
 	si le stocheaza intr-un vector*/
-	
 	
 	std::vector<double> F;
 
@@ -96,8 +107,6 @@ void camp_sir(int nr_frc, double a, double t, double T, std::vector<double> *sir
 	double period = T * 1.0e-12;
 	int i_max = (int) (T / t);
 	double f = 1.0 / period;
-
-
 
 	double h;
 	for (int i = 0; i < i_max/2; i++) {
@@ -127,7 +136,8 @@ void camp_sir(int nr_frc, double a, double t, double T, std::vector<double> *sir
 	*sir = F;
 }
 
-void position_coeficients(Particula P1, Particula P2, Interactiuni *Pos_Coef) {
+void position_coeficients(Particula P1, Particula P2, Interactiuni *Pos_Coef) 
+{
 	double dist = sqrt((P2.X - P1.X)*(P2.X - P1.X) + (P2.Y - P1.Y)*(P2.Y - P1.Y) + (P2.Z - P1.Z)*(P2.Z - P1.Z));
 	double rx = (P2.X - P1.X) / dist;
 	double ry = (P2.Y - P1.Y) / dist;
